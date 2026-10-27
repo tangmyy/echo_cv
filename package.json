@@ -1,0 +1,42 @@
+{
+  "name": "erocat-homepage-init",
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.27.0",
+  "private": true,
+  "scripts": {
+    "dev": "node scripts/sync-images.mjs && next dev",
+    "build": "node scripts/sync-images.mjs && next build",
+    "images:sync": "node scripts/sync-images.mjs",
+    "start": "next start",
+    "lint": "eslint",
+    "test:unit": "node --experimental-strip-types --test src/lib/liquid-glass.test.ts src/lib/liquid-glass-runtime.test.ts src/lib/palette.test.ts src/app/globals.test.ts src/app/entrance-animations.test.ts"
+  },
+  "dependencies": {
+    "@callstack/liquid-glass": "^0.7.1",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.34.0",
+    "lucide-react": "^0.564.0",
+    "mapbox-gl": "^3.18.1",
+    "next": "16.1.6",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "tailwind-merge": "^3.4.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "raw-loader": "^4.0.2",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  },
+  "pnpm": {
+    "ignoredBuiltDependencies": [
+      "sharp",
+      "unrs-resolver"
+    ]
+  }
+}

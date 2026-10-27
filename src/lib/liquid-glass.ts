@@ -1,0 +1,333 @@
+export type GlassVariant = "hero" | "panel" | "media" | "dense" | "immersive";
+export type GlassColorScheme = "light" | "dark";
+
+export interface GlassMaterialProfile {
+  tint: readonly [number, number, number];
+  tintAlpha: number;
+  sceneCoverage: number;
+  saturation: number;
+  exposure: number;
+  edgeHighlightGain: number;
+  edgeShadowGain: number;
+}
+
+export interface GlassVariantConfig {
+  cssRadius: string;
+  shaderRadius: number;
+  shapeRoundness: number;
+  refThickness: number;
+  refFactor: number;
+  refDispersion: number;
+  /** Rim line strength: crisp directional edge specular + counter rim. */
+  fresnelFactor: number;
+  /** Bottom counter-rim (secondary bright line) strength. */
+  glareFactor: number;
+  /** Interior top-left glow strength (internal reflection). */
+  glareOppositeFactor: number;
+  /** Long-range lens falloff (CSS px): how deep edge refraction bends the scene. */
+  edgeLensRange: number;
+  /** Center magnification factor ("under glass" zoom, e.g. 1.04 = 4%). */
+  lensMagnification: number;
+  /** Mirrored-rim strength: content flip at the outermost silhouette pixels. */
+  rimMirror: number;
+  bevelWidth: number;
+  magnification: number;
+  surfaceBlurMix: number;
+  counterRimFactor: number;
+  pointerRefraction: number;
+  pointerGlare: number;
+  pressDepth: number;
+  tint: readonly [number, number, number];
+  tintAlpha: number;
+  light: GlassMaterialProfile;
+  dark: GlassMaterialProfile;
+  fallbackBlurPx: number;
+}
+
+export const DEFAULT_GLASS_VARIANT: GlassVariant = "panel";
+export const SHARED_GLASS_RADIUS_PX = 32;
+export const SHARED_GLASS_RADIUS_CSS = `${SHARED_GLASS_RADIUS_PX}px`;
+export const STANDARD_ROUNDED_RECT_SHAPE = 2;
+
+/** Ambient light direction — the GL mirror of the `--amb-light-x/y` CSS
+ *  tokens (same 45° diagonal). One physical light drives both the shader's
+ *  lit-corner interior glow and every CSS cast shadow; never fork them. */
+export const AMBIENT_LIGHT = { x: -0.7071, y: -0.7071 } as const;
+
+export const LIQUID_GLASS_CANVAS = {
+  /** Target softening of the blurred scene layer, anchored in CSS px so every
+   *  quality tier renders the same visual blur regardless of buffer scale. */
+  sceneBlurRadiusCss: 12,
+  /** Scene buffer renders at min(dpr, this) × CSS size to bound fill cost on
+   *  high-DPR screens; refraction rims still shade at full canvas resolution. */
+  sceneBufferMaxScale: 1.5,
+  /** Ease-out duration for revealing scene coverage once the first real
+   *  background texture is ready, in ms. */
+  bgReadyRampMs: 450,
+  maxDpr: 2,
+  /** Padding around each card's scissor rect; covers the shader's contact
+   *  shadow plus the refraction silhouette margin. */
+  scissorPaddingPx: 12,
+  measureWarmupFrames: 8,
+  rootDatasetKey: "liquidGlass",
+  activeBackgroundDatasetKey: "liquidGlassBg",
+  nextBackgroundDatasetKey: "liquidGlassBgNext",
+  previousBackgroundDatasetKey: "liquidGlassBgPrev",
+  backgroundTransitionStartedAtDatasetKey: "liquidGlassBgTransitionStartedAt",
+  backgroundTransitionDurationDatasetKey: "liquidGlassBgDuration",
+  registryChangeEventName: "liquid-glass:registry-change",
+  backgroundTransitionMs: 2000,
+  spring: {
+    stiffness: 220,
+    damping: 26,
+  },
+} as const;
+
+export function toDataAttributeName(datasetKey: string): string {
+  return `data-${datasetKey.replace(/[A-Z]/g, (value) => `-${value.toLowerCase()}`)}`;
+}
+
+export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
+  hero: {
+    cssRadius: SHARED_GLASS_RADIUS_CSS,
+    shaderRadius: SHARED_GLASS_RADIUS_PX,
+    shapeRoundness: STANDARD_ROUNDED_RECT_SHAPE,
+    refThickness: 70,
+    refFactor: 2.18,
+    refDispersion: 2.16,
+    fresnelFactor: 0.18,
+    glareFactor: 0.145,
+    glareOppositeFactor: 0.92,
+    edgeLensRange: 22,
+    lensMagnification: 1.048,
+    rimMirror: 0.85,
+    bevelWidth: 16,
+    magnification: 0.12,
+    surfaceBlurMix: 0.21,
+    counterRimFactor: 0.15,
+    pointerRefraction: 0.86,
+    pointerGlare: 0.78,
+    pressDepth: 0.10,
+    tint: [1, 1, 1],
+    tintAlpha: 0.036,
+    light: {
+      tint: [1.0, 1.0, 1.0],
+      tintAlpha: 0.02,
+      sceneCoverage: 0.93,
+      saturation: 1.22,
+      exposure: 1.06,
+      edgeHighlightGain: 1.5,
+      edgeShadowGain: 1.08,
+    },
+    dark: {
+      tint: [0.82, 0.9, 1.0],
+      tintAlpha: 0.05,
+      sceneCoverage: 0.93,
+      saturation: 1.26,
+      exposure: 1.08,
+      edgeHighlightGain: 1.66,
+      edgeShadowGain: 1.18,
+    },
+    fallbackBlurPx: 12,
+  },
+  panel: {
+    cssRadius: SHARED_GLASS_RADIUS_CSS,
+    shaderRadius: SHARED_GLASS_RADIUS_PX,
+    shapeRoundness: STANDARD_ROUNDED_RECT_SHAPE,
+    refThickness: 70,
+    refFactor: 2.06,
+    refDispersion: 1.82,
+    fresnelFactor: 0.155,
+    glareFactor: 0.122,
+    glareOppositeFactor: 0.88,
+    edgeLensRange: 18,
+    lensMagnification: 1.04,
+    rimMirror: 0.75,
+    bevelWidth: 15,
+    magnification: 0.09,
+    surfaceBlurMix: 0.3,
+    counterRimFactor: 0.13,
+    pointerRefraction: 0.66,
+    pointerGlare: 0.62,
+    pressDepth: 0.075,
+    tint: [1, 1, 1],
+    tintAlpha: 0.03,
+    light: {
+      tint: [1.0, 1.0, 1.0],
+      tintAlpha: 0.018,
+      sceneCoverage: 0.92,
+      saturation: 1.2,
+      exposure: 1.05,
+      edgeHighlightGain: 1.42,
+      edgeShadowGain: 1.0,
+    },
+    dark: {
+      tint: [0.82, 0.9, 1.0],
+      tintAlpha: 0.046,
+      sceneCoverage: 0.92,
+      saturation: 1.24,
+      exposure: 1.07,
+      edgeHighlightGain: 1.56,
+      edgeShadowGain: 1.12,
+    },
+    fallbackBlurPx: 10,
+  },
+  media: {
+    cssRadius: SHARED_GLASS_RADIUS_CSS,
+    shaderRadius: SHARED_GLASS_RADIUS_PX,
+    shapeRoundness: STANDARD_ROUNDED_RECT_SHAPE,
+    refThickness: 54,
+    refFactor: 1.94,
+    refDispersion: 1.54,
+    fresnelFactor: 0.125,
+    glareFactor: 0.095,
+    glareOppositeFactor: 0.82,
+    edgeLensRange: 16,
+    lensMagnification: 1.036,
+    rimMirror: 0.7,
+    bevelWidth: 14,
+    magnification: 0.05,
+    surfaceBlurMix: 0.18,
+    counterRimFactor: 0.09,
+    pointerRefraction: 0.34,
+    pointerGlare: 0.34,
+    pressDepth: 0,
+    tint: [1, 1, 1],
+    tintAlpha: 0.028,
+    light: {
+      tint: [1.0, 1.0, 1.0],
+      tintAlpha: 0.016,
+      sceneCoverage: 0.9,
+      saturation: 1.17,
+      exposure: 1.03,
+      edgeHighlightGain: 1.36,
+      edgeShadowGain: 0.96,
+    },
+    dark: {
+      tint: [0.84, 0.91, 1.0],
+      tintAlpha: 0.042,
+      sceneCoverage: 0.9,
+      saturation: 1.21,
+      exposure: 1.06,
+      edgeHighlightGain: 1.48,
+      edgeShadowGain: 1.06,
+    },
+    fallbackBlurPx: 10,
+  },
+  dense: {
+    cssRadius: SHARED_GLASS_RADIUS_CSS,
+    shaderRadius: SHARED_GLASS_RADIUS_PX,
+    shapeRoundness: STANDARD_ROUNDED_RECT_SHAPE,
+    refThickness: 44,
+    refFactor: 1.84,
+    refDispersion: 1.3,
+    fresnelFactor: 0.11,
+    glareFactor: 0.085,
+    glareOppositeFactor: 0.78,
+    edgeLensRange: 14,
+    lensMagnification: 1.032,
+    rimMirror: 0.6,
+    bevelWidth: 12,
+    magnification: 0.035,
+    surfaceBlurMix: 0.25,
+    counterRimFactor: 0.07,
+    pointerRefraction: 0.22,
+    pointerGlare: 0.24,
+    pressDepth: 0,
+    tint: [1, 1, 1],
+    tintAlpha: 0.024,
+    light: {
+      tint: [1.0, 1.0, 1.0],
+      tintAlpha: 0.014,
+      sceneCoverage: 0.88,
+      saturation: 1.16,
+      exposure: 1.03,
+      edgeHighlightGain: 1.32,
+      edgeShadowGain: 0.94,
+    },
+    dark: {
+      tint: [0.86, 0.92, 1.0],
+      tintAlpha: 0.038,
+      sceneCoverage: 0.89,
+      saturation: 1.2,
+      exposure: 1.05,
+      edgeHighlightGain: 1.42,
+      edgeShadowGain: 1.04,
+    },
+    fallbackBlurPx: 8,
+  },
+  immersive: {
+    cssRadius: SHARED_GLASS_RADIUS_CSS,
+    shaderRadius: SHARED_GLASS_RADIUS_PX,
+    shapeRoundness: STANDARD_ROUNDED_RECT_SHAPE,
+    refThickness: 84,
+    refFactor: 2.34,
+    refDispersion: 2.34,
+    fresnelFactor: 0.22,
+    glareFactor: 0.17,
+    glareOppositeFactor: 0.96,
+    edgeLensRange: 24,
+    lensMagnification: 1.05,
+    rimMirror: 0.9,
+    bevelWidth: 17,
+    magnification: 0.14,
+    surfaceBlurMix: 0.26,
+    counterRimFactor: 0.17,
+    pointerRefraction: 0.98,
+    pointerGlare: 0.94,
+    pressDepth: 0.12,
+    tint: [1, 1, 1],
+    tintAlpha: 0.04,
+    light: {
+      tint: [1.0, 1.0, 1.0],
+      tintAlpha: 0.022,
+      sceneCoverage: 0.94,
+      saturation: 1.24,
+      exposure: 1.05,
+      edgeHighlightGain: 1.55,
+      edgeShadowGain: 1.15,
+    },
+    dark: {
+      tint: [0.8, 0.89, 1.0],
+      tintAlpha: 0.054,
+      sceneCoverage: 0.94,
+      saturation: 1.28,
+      exposure: 1.09,
+      edgeHighlightGain: 1.7,
+      edgeShadowGain: 1.22,
+    },
+    fallbackBlurPx: 14,
+  },
+};
+
+export function resolveGlassMaterial(
+  variant: GlassVariantConfig,
+  colorScheme: GlassColorScheme,
+): GlassMaterialProfile {
+  return variant[colorScheme];
+}
+
+export function resolveGlassVariant(value?: string): GlassVariant {
+  if (!value) {
+    return DEFAULT_GLASS_VARIANT;
+  }
+
+  return value in GLASS_VARIANTS
+    ? (value as GlassVariant)
+    : DEFAULT_GLASS_VARIANT;
+}
+
+/**
+ * Convert the CSS-anchored scene blur target into a per-pass texel radius for
+ * the downscaled blur buffer. Two separable passes compose to ~sqrt(2)× the
+ * per-pass softening, so each pass carries ~0.707 of the target; the radius
+ * scales with dpr × blurBufferScale so every quality tier renders the same
+ * visual blur in CSS pixels.
+ */
+export function resolveSceneBlurTexelRadius(
+  sceneBlurRadiusCss: number,
+  dpr: number,
+  blurBufferScale: number,
+): number {
+  return Math.max(1, Math.round(sceneBlurRadiusCss * Math.SQRT1_2 * dpr * blurBufferScale));
+}
