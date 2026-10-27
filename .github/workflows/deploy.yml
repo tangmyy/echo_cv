@@ -1,99 +1,141 @@
-name: Deploy homepage to server
+# GitHub Actions 工作流：GitHub 构建，SSH 发布到个人服务器；不是 GitHub Pages。
+# 服务器原有 /usr/share/nginx/html/index.html 不会被覆盖。
+# 新网站入口：/usr/share/nginx/html/echo/current/index.html。
+# Nginx 的 root 必须指向 /usr/share/nginx/html/echo/current 才会展示新网站。
+name: Deploy homepage to server # Actions 页面显示的工作流名称。
 
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
+on: # 定义工作流的触发条件。
+  push: # 有代码推送时检查下面的分支条件。
+    branches: [main] # 只在 main 分支收到推送时自动部署。
+  workflow_dispatch: # 允许在 Actions 页面点击 Run workflow 手动执行。
 
-permissions:
-  contents: read
+permissions: # GitHub 自动提供的仓库访问令牌的权限，不是服务器权限。
+  contents: read # 只允许读取代码，无需写入仓库或 GitHub Pages。
 
-concurrency:
-  group: deploy-homepage
-  cancel-in-progress: false
+concurrency: # 控制同一网站的部署并发，避免同时切换 current。
+  group: deploy-homepage # 同组部署共用一个执行队列。
+  cancel-in-progress: false # 不取消正在执行的部署；待运行任务可能被更新的任务替换。
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+jobs: # 定义任务集合。
+  deploy: # 本工作流只有一个名为 deploy 的任务。
+    runs-on: ubuntu-24.04 # 固定 GitHub 构建机器系统，避免 ubuntu-latest 自动迁移；不是服务器系统。
+    timeout-minutes: 20 # 整个任务最多运行20分钟，超时会停止。
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    steps: # 以下步骤在同一台临时构建机器上顺序执行，失败则停止后续发布。
+      - name: Checkout # 第一步：取出触发此次运行的代码版本。
+        uses: actions/checkout@v6 # 使用已迁移到 Node24 运行时的官方代码下载 Action。
+        with: # 设置上面这个 Action 的参数。
+          persist-credentials: false # 下载后不在 Git 配置里保留仓库访问凭证。
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - name: Setup pnpm # 第二步：准备包管理器。
+        uses: pnpm/action-setup@v5 # 使用 Node24 运行时版本，pnpm 版本从 packageManager 自动读取。
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
+      - name: Setup Node.js # 第三步：准备项目构建用的 Node.js。
+        uses: actions/setup-node@v6 # 此 Action 自身运行于 Node24，与下行项目 Node 版本不同。
+        with: # 指定项目构建环境参数。
+          node-version: 22 # pnpm build 使用 Node22，不要求 CentOS 服务器安装 Node。
+          cache: pnpm # 缓存 pnpm 依赖存储，加快后续安装，不等于跳过安装。
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Install dependencies # 第四步：安装 package.json 中的依赖。
+        run: pnpm install --frozen-lockfile # 严格使用 pnpm-lock.yaml，锁文件不匹配时失败。
 
-      - name: Build static website
-        # Mapbox 公开 Token 必须在构建时注入，静态文件发布后不能再读取服务器环境变量。
-        env:
-          NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: ${{ secrets.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN }}
-        run: |
+      - name: Build static website # 第五步：图片转换、Next.js 构建、检查产物并打包。
+        env: # 环境变量仅注入这个步骤，不会把私钥写进前端。
+          NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: ${{ secrets.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN }} # 从仓库 Secrets 读取 pk.公开Token，构建时写入网页。
+        run: | # 下面缩进内容是 Bash 脚本；脚本注释放在命令前一行。
+          # 执行 package.json 的 build：先转换图片，再 next build；TypeScript错误会让本步骤失败。
           pnpm build
+          # 确认静态导出的首页存在；不存在时返回非零退出码，停止部署。
           test -f out/index.html
+          # 把 out 目录内容压缩成 site.tar.gz，压缩包内不多包一层 out 目录。
           tar -czf site.tar.gz -C out .
 
-      - name: Configure SSH
-        env:
-          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
-          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
-        run: |
+      - name: Configure SSH # 第六步：在 GitHub 临时机器上配置服务器登录密钥。
+        env: # 从 Secrets 读取SSH部署信息，避免在YAML里直接填写凭证。
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }} # 服务器公网IP或主机名，不包含协议和端口。
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }} # 服务器SSH端口，如22。
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }} # 必填：服务器部署用户名，如webdeploy；缺失会导致以runner用户登录而被拒绝。
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }} # 专用SSH私钥全文，不是.pub公钥。
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }} # 已核实的服务器SSH身份记录，不是部署公钥。
+        run: | # 本步骤仍然在 GitHub 构建机器执行，不在服务器执行。
+          # 遍历必须配置的五个SSH Secret的变量名，不输出它们的值。
+          for name in DEPLOY_HOST DEPLOY_PORT DEPLOY_USER DEPLOY_KEY DEPLOY_KNOWN_HOSTS; do
+            # 读取变量是否为空；缺少时输出明确错误，退出整个步骤。
+            if [ -z "${!name}" ]; then echo "::error::Missing repository secret: $name"; exit 1; fi
+          # 结束循环。
+          done
+          # 创建仅当前用户可访问的SSH配置目录。
           install -m 700 -d ~/.ssh
-          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy_key
-          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          # 写入私钥，去掉Windows复制可能带入的回车符；不打印私钥。
+          printf '%s\n' "$DEPLOY_KEY" | tr -d '\r' > ~/.ssh/deploy_key
+          # 写入服务器身份记录，去掉Windows回车符；保持严格主机校验。
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" | tr -d '\r' > ~/.ssh/known_hosts
+          # 设置凭证文件为仅当前用户可读写，符合SSH权限要求。
           chmod 600 ~/.ssh/deploy_key ~/.ssh/known_hosts
+          # 本地解析私钥验证格式；自动部署使用无口令的专用密钥，不输出公钥内容。
+          ssh-keygen -y -P "" -f ~/.ssh/deploy_key > /dev/null
 
-      - name: Upload and publish
-        env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-        run: |
-          scp -O \
-            -i ~/.ssh/deploy_key \
-            -o BatchMode=yes \
-            -o StrictHostKeyChecking=yes \
-            -P "$DEPLOY_PORT" \
-            site.tar.gz \
-            "$DEPLOY_USER@$DEPLOY_HOST:/usr/share/nginx/html/echo/releases/$GITHUB_SHA.tar.gz"
+      - name: Verify SSH and deployment directory # 第七步：单独检查连接和目录写权限，便于定位错误。
+        env: # 这些变量只在本步骤有效，需重新引用同名Secrets。
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }} # 目标服务器地址。
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }} # SSH端口。
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }} # 部署用户。
+        run: | # 这里的ssh客户端运行在GitHub，被引号包住的命令运行在服务器。
+          # -i指定密钥；BatchMode禁止密码交互；严格校验服务器身份；超时15秒；VERIFY之间是远程脚本。
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" 'bash -s' <<'VERIFY'
+          # 远程检查遇错停止，避免无权限时继续上传。
+          set -eu
+          # 确保发布目录存在；若部署账号不能创建它，输出系统权限错误。
+          mkdir -p /usr/share/nginx/html/echo/releases
+          # 检查压缩包上传目录的写权限，不输出凭证。
+          test -w /usr/share/nginx/html/echo/releases || { echo 'ERROR: deployment user cannot write echo/releases' >&2; exit 1; }
+          # 切换current需要echo目录可写，不只是releases可写。
+          test -w /usr/share/nginx/html/echo || { echo 'ERROR: deployment user cannot write echo' >&2; exit 1; }
+          # 两个权限检查均通过后输出成功提示。
+          echo 'SSH connection and deployment directory are ready.'
+          # 结束远程检查脚本；标记后不能追加行内注释。
+          VERIFY
 
-          ssh \
-            -i ~/.ssh/deploy_key \
-            -o BatchMode=yes \
-            -o StrictHostKeyChecking=yes \
-            -p "$DEPLOY_PORT" \
-            "$DEPLOY_USER@$DEPLOY_HOST" \
-            "bash -s -- '$GITHUB_SHA'" <<'REMOTE'
-          set -euo pipefail
+      - name: Upload website archive # 第八步：上传构建压缩包，不直接覆盖现有网页。
+        env: # 引用本步骤连接所需的变量。
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }} # 上传目标地址。
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }} # scp用大写-P设置端口。
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }} # 上传使用的服务器账号。
+        run: | # $GITHUB_SHA是GitHub自动提供的本次提交编号，不需要手动配置。
+          # scp -O使用传统SCP协议兼容旧服务器；目标文件名以提交编号区分版本。
+          scp -O -i ~/.ssh/deploy_key -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 -P "$DEPLOY_PORT" site.tar.gz "$DEPLOY_USER@$DEPLOY_HOST:/usr/share/nginx/html/echo/releases/$GITHUB_SHA.tar.gz"
 
+      - name: Publish website version # 第九步：通过SSH在服务器解压并切换当前版本。
+        env: # 本步骤同样需要服务器连接信息。
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }} # 服务器地址。
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }} # SSH端口，小写-p。
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }} # 有echo目录写权限的账号，无需root。
+        run: | # REMOTE之间的内容会作为脚本发送到服务器，不是在GitHub解压。
+          # bash -s从标准输入读取脚本；--后面的提交编号成为远程脚本的第一个参数$1。
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" "bash -s -- '$GITHUB_SHA'" <<'REMOTE'
+          # 以下命令在服务器执行：失败就退出，未定义变量报错，管道失败也报错。
+          set -Eeuo pipefail
+          # 发布失败时报告远程脚本行号，不输出密钥或整条失败命令。
+          trap 'printf "ERROR: publish failed at remote script line %s\n" "$LINENO" >&2' ERR
+          # 读取从GitHub传来的提交编号。
           revision="$1"
+          # 只操作echo子目录，不改动上一级html/index.html。
           base=/usr/share/nginx/html/echo
+          # 拼接本次版本目录。
           release="$base/releases/$revision"
-
+          # 创建版本目录；同一提交重跑时允许目录已存在。
           mkdir -p "$release"
+          # 将上传的压缩包解压到本次版本目录。
           tar -xzf "$base/releases/$revision.tar.gz" -C "$release"
+          # 检查解压后的首页；没有首页则不切换当前线上版本。
           test -f "$release/index.html"
-
+          # 部署用户可读写，其他用户可读取；X仅为目录或已有可执行文件保留执行权限。
           chmod -R u=rwX,go=rX "$release"
-
+          # 建立指向新版本的临时软链接，current尚未改变。
           ln -sfn "$release" "$base/current.next"
+          # 把临时链接重命名为current，切换Nginx正在读取的版本。
           mv -Tf "$base/current.next" "$base/current"
+          # 在日志输出固定的产物位置，便于确认；不输出任何密钥。
+          echo "Published: /usr/share/nginx/html/echo/current/index.html"
+          # 结束发送到服务器的脚本；REMOTE标记本身不是服务器执行命令。
           REMOTE
-
-# 推送 main
-#   → GitHub 创建临时 Ubuntu 构建机器
-#   → 下载代码
-#   → 安装 Node.js、pnpm 和项目依赖
-#   → 注入 Mapbox Token 并构建
-#   → 打包网页
-#   → SSH 上传服务器
-#   → 切换到新版本

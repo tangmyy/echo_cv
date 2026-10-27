@@ -41,5 +41,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 TASK_PLANS.md
+/AGENTS.md
+/README_CUSTOM.md
 /.idea/
 /.worktrees/
