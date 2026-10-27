@@ -47,8 +47,10 @@ jobs: # 定义任务集合。
           pnpm build
           # 确认静态导出的首页存在；不存在时返回非零退出码，停止部署。
           test -f out/index.html
-          # 把 out 目录内容压缩成 site.tar.gz，压缩包内不多包一层 out 目录。
-          tar -czf site.tar.gz -C out .
+          # 网页运行时使用optimized图片；发布包排除背景/照片原图，本地和仓库源素材保留。
+          tar -czf site.tar.gz --exclude='./bg' --exclude='./photos' -C out .
+          # 输出实际压缩包大小，便于判断上传耗时，不输出密钥。
+          ls -lh site.tar.gz
 
       - name: Configure SSH # 第六步：在 GitHub 临时机器上配置服务器登录密钥。
         env: # 从 Secrets 读取SSH部署信息，避免在YAML里直接填写凭证。
@@ -102,8 +104,8 @@ jobs: # 定义任务集合。
           DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }} # scp用大写-P设置端口。
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }} # 上传使用的服务器账号。
         run: | # $GITHUB_SHA是GitHub自动提供的本次提交编号，不需要手动配置。
-          # scp -O使用传统SCP协议兼容旧服务器；目标文件名以提交编号区分版本。
-          scp -O -i ~/.ssh/deploy_key -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 -P "$DEPLOY_PORT" site.tar.gz "$DEPLOY_USER@$DEPLOY_HOST:/usr/share/nginx/html/echo/releases/$GITHUB_SHA.tar.gz"
+          # scp -O兼容旧服务器；每30秒检查连接，连续3次无响应则停止；上传为part表示未校验。
+          scp -O -i ~/.ssh/deploy_key -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -P "$DEPLOY_PORT" site.tar.gz "$DEPLOY_USER@$DEPLOY_HOST:/usr/share/nginx/html/echo/releases/$GITHUB_SHA.tar.gz.part"
 
       - name: Publish website version # 第九步：通过SSH在服务器解压并切换当前版本。
         env: # 本步骤同样需要服务器连接信息。
@@ -111,8 +113,10 @@ jobs: # 定义任务集合。
           DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }} # SSH端口，小写-p。
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }} # 有echo目录写权限的账号，无需root。
         run: | # REMOTE之间的内容会作为脚本发送到服务器，不是在GitHub解压。
-          # bash -s从标准输入读取脚本；--后面的提交编号成为远程脚本的第一个参数$1。
-          ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" "bash -s -- '$GITHUB_SHA'" <<'REMOTE'
+          # 计算GitHub端压缩包摘要，用于核对服务器收到的文件，不是凭证。
+          archive_sha=$(sha256sum site.tar.gz | cut -d ' ' -f 1)
+          # 将提交编号和摘要作为远程脚本的$1与$2，脚本通过标准输入发送。
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" "bash -s -- '$GITHUB_SHA' '$archive_sha'" <<'REMOTE'
           # 以下命令在服务器执行：失败就退出，未定义变量报错，管道失败也报错。
           set -Eeuo pipefail
           # 发布失败时报告远程脚本行号，不输出密钥或整条失败命令。
@@ -121,6 +125,10 @@ jobs: # 定义任务集合。
           revision="$1"
           # 只操作echo子目录，不改动上一级html/index.html。
           base=/usr/share/nginx/html/echo
+          # 检查服务器上的part文件与GitHub构建包一致；失败则不解压、不切换current。
+          printf '%s  %s\n' "$2" "$base/releases/$revision.tar.gz.part" | sha256sum -c -
+          # 校验通过才改为正式压缩包名；同提交重跑会替换此前同名残缺包。
+          mv -f "$base/releases/$revision.tar.gz.part" "$base/releases/$revision.tar.gz"
           # 拼接本次版本目录。
           release="$base/releases/$revision"
           # 创建版本目录；同一提交重跑时允许目录已存在。
