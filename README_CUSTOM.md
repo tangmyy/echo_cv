@@ -1,5 +1,11 @@
 # 二次开发记录
 
+## GitHub Actions 服务器部署
+
+`.github/workflows/deploy.yml` 当前为服务器部署，推送 main 或手动触发，在 GitHub Ubuntu Runner 上使用 Node 22、packageManager 指定的 pnpm 安装并构建，打包 out/，通过 SSH 上传到 `/usr/share/nginx/html/echo/releases/提交编号.tar.gz`，解压到对应目录并切换 current 软链接。Nginx root 指向 `/usr/share/nginx/html/echo/current`。服务器只提供静态文件。
+
+需要六个仓库 Secrets：`DEPLOY_HOST`、`DEPLOY_PORT`、`DEPLOY_USER`、`DEPLOY_KEY`、`DEPLOY_KNOWN_HOSTS`、`NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN`。后者仅注入 Build static website 步骤；本地 .env.local 不上传 GitHub。SSH 使用预先核实的 known_hosts，不关闭主机身份校验；部署账号需有 echo 目录写权限。不自动申请证书、不自动配置 Nginx、不清理历史版本。此工作流尚未在个人服务器实际部署验证。
+
 ## Mapbox 环境变量与开源提交
 
 源码不再内嵌 Mapbox Token：`siteConfig.map.accessToken` 读取 `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN`。

@@ -211,6 +211,7 @@ Bento-Homepage/
 - **指针交互边界**：桌面端一次只允许一个可见卡片获得指针 spring；状态只能存在于 canvas runtime ref/闭包，禁止用 React state 或 pointer 热路径布局读取。`pointercancel`、window `blur`、页面 hidden、卡片注销和粗指针/减少动态效果切换必须清除或回弹状态。
 
 ### Asset & Lazy Runtime 优化
+- **个人服务器部署工作流**：deploy.yml 为 main/手动触发的 Ubuntu Runner 构建，经 SSH 发布至 `/usr/share/nginx/html/echo/releases` 并切换 current；Build static website 必须保留 `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN` 的 Secrets env 注入，不得随工作流替换遗漏。SSH 五项部署 Secrets 与 Mapbox 一项共六项，禁止在 YAML 内嵌凭证。
 - **Mapbox 开源配置**：仅通过 `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN` 使用 `pk.` 公开 Token，源码禁止内嵌值；本地 `.env.local` 忽略、`.env.example` 空模板可提交，Actions Build env 从 Secrets 注入。该值会进入静态客户端产物，不具备保密性；使用个人公开 Token 并设置允许 URL，禁止使用 `sk.`。next.config 启动/构建校验前缀；缺少配置则显示配置化占位且不加载地图。历史泄露需独立撤销与清理，不能仅追加删除提交。
 - **个人足迹地图**：`siteConfig.map.markers` 包含 57 个带 `visitedAt` 日期的足迹地点，点击弹窗显示名称与日期；城市/县城采用近似中心、自治州采用州府坐标。距离起点读取 `map.origin`（当前上海），禁止在地图组件中硬编码合肥；零公里标签正常显示。个人化改动同步记录到 `README_CUSTOM.md`，保留原版 README.md。
 - **图片同步脚本**：`pnpm images:sync` / `node scripts/sync-images.mjs` 将 `public/bg`、`public/photos` 顶层图片转换到对应 optimized 目录（WebP quality 85、最长边 2560、不放大、自动校正方向）。复用 Next.js 依赖的 sharp；按 mtime 增量跳过，`--force` 全量重建；保留原图和旧优化图，输出文件名冲突时报错。`pnpm dev` / `pnpm build` 启动前显式执行一次，不常驻监听。
