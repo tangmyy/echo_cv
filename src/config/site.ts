@@ -208,9 +208,9 @@ export const siteConfig: SiteConfig = {
             items: [
                 "Suzuki GSX250R",
                 "Aprilia GPR250R",
-                "Zontes 703F",
                 "VOGE CU525",
                 "VOGE CU625",
+                "Zontes 703F",
             ],
         },
     ],
@@ -414,7 +414,7 @@ export const siteConfig: SiteConfig = {
     seo: {
         title: "Echo — ZX个人主页",
         description:
-            "Echo（ZX）的个人主页 — Full-Stack Developer & Vibe Coder。热衷 Spring Boot、Unity、3D 打印、DIY、VRChat、Home Assistant 智能家居，以及各种折腾服务器与网络。欢迎交流产品创意与技术探讨。",
+            "Echo（ZX）的个人主页 — Full-Stack Developer & Vibe Coder。热衷Vibe Coding、骑行、视频拍摄与剪辑、以及各种折腾服务器，欢迎交流产品创意与技术探讨。",
         keywords: [
             "Echo", "Tmyyy", "脆脆鲨同学",
             "全栈开发", "个人主页", "CV",
