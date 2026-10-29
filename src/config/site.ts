@@ -113,6 +113,10 @@ export interface SiteConfig {
             visitedAt?: string;
         }[];
     };
+    geolocation: {
+        ipProviders: { name: string; url: string }[];
+        timeoutMs: number;
+    };
     weather?: {
         city: string;
         lat: number;
@@ -145,7 +149,7 @@ export const siteConfig: SiteConfig = {
         },
         avatar: "/sheep.png",
         aliases: ["张行", "Tmyyy", "脆脆鲨同学", "Echo"],
-        location: "China Anhui | VRChat",
+        location: "China Sanya | Cycling",
     },
 
     cardTitles: {
@@ -383,6 +387,14 @@ export const siteConfig: SiteConfig = {
         ],
     },
     
+    geolocation: {
+        ipProviders: [
+            { name: "GeoJS", url: "https://get.geojs.io/v1/ip/geo.json" },
+            { name: "IPWHOIS", url: "https://ipwho.is/" },
+        ],
+        timeoutMs: 4000,
+    },
+
     weather: { ...defaultWeatherLocation },
 
     vrchat: {

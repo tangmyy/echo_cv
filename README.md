@@ -88,9 +88,9 @@ blog: {
 
 按数组顺序展示，日期为空时隐藏时间。单条内容提供右上角快捷入口；增加内容时同步调整网格高度，保持紧凑。清空 posts 会隐藏卡片内容，若需完整移除占位，还要处理 page.tsx 外层网格项。
 
-### GitHub 近三年热力图
+### GitHub 当年热力图
 
-`github.username` 当前为 `tangmyy`，`github.years` 为 3。展示包含当前年的最近三个自然年：2026 年访问时为 2024—2026，当前年仅展示接口已有的数据，不等于滚动 36 个月。
+`github.username` 当前为 `tangmyy`，`github.years` 为 1。仅请求访问时所在自然年的贡献数据：2026 年访问时展示 2026 年，跨年刷新后自动使用新年份；展示接口已有的数据，不是过去滚动 12 个月。
 
 通过第三方公开接口一次请求多个年份，按日期排序绘制、跨年显示年份、汇总贡献数量。支持横向滚动，默认滚到最新，并保留逐日提示与受可见性/减少动态效果控制的贪吃蛇动画。
 
@@ -102,7 +102,7 @@ blog: {
 - 坐标采用近似城市/县城中心，自治州采用州府位置，不代表实际旅行路径或精确到访点。
 - 距离起点独立配置为上海市：`map.origin.coordinates = [121.4737, 31.2304]`。
 - 地图连接起点与访客位置，展示近似直线距离；零公里也可显示。距离标签位于弧线中点，不会自动调整视野包含所有端点。
-- 天气使用 Open-Meteo。位置优先取已授权的浏览器定位，其次 IP 定位；均失败时回退三亚市，由 defaultWeatherLocation / weather 集中配置，不在首屏主动请求定位权限。
+- 天气使用 Open-Meteo。位置优先取已授权的浏览器定位，其次按 `siteConfig.geolocation.ipProviders` 顺序尝试 GeoJS、IPWHOIS（每个接口超时 4 秒）；均失败时回退三亚市，由 defaultWeatherLocation / weather 集中配置，不在首屏主动请求定位权限。已移除曾返回 Cloudflare 403 验证页面的 ipapi.co。接口必须返回成功 HTTP 状态、JSON 及有效经纬度；失败会在控制台记录服务名称与原因，不输出 IP。GeoJS 官方文档：https://www.geojs.io/docs/v1/endpoints/geo/；IPWHOIS 官方文档：https://ipwhois.io/documentation 。免费接口可用性及 IP 城市准确度仍取决于网络与服务数据，GeoJS 城市名可能为英文。`pnpm test:location` 可验证 403 切换、超时、无效响应和默认回退逻辑。
 - 地图与天气共用定位 hook；定位失败时，地图访客点也可能是三亚默认位置，此时距离不代表真实访客距离。
 
 ## 本地开发

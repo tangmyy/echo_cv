@@ -43,7 +43,7 @@ function formatDate(dateStr: string): string {
 
 export function GitHubHeatmapCard() {
     const username = siteConfig.github?.username;
-    const yearCount = siteConfig.github?.years ?? 3;
+    const yearCount = siteConfig.github?.years ?? 1;
     const [data, setData] = useState<ContributionData | null>(null);
     // Initialize loading based on whether username exists to avoid immediate state change
     const [loading, setLoading] = useState(!!username);
@@ -382,7 +382,7 @@ export function GitHubHeatmapCard() {
                 <h3 className="text-lg font-semibold text-text-primary">GitHub</h3>
                 {data && (
                     <span className="text-sm text-text-tertiary">
-                        近 {yearCount} 年 <strong className="text-text-primary">{data.contributions.reduce((sum, day) => sum + day.count, 0)}</strong> 次贡献
+                        {yearCount === 1 ? "当年" : `近 ${yearCount} 年`} <strong className="text-text-primary">{data.contributions.reduce((sum, day) => sum + day.count, 0)}</strong> 次贡献
                     </span>
                 )}
             </div>

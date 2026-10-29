@@ -9,6 +9,7 @@
     "images:sync": "node scripts/sync-images.mjs",
     "start": "next start",
     "lint": "eslint",
+    "test:location": "node --experimental-strip-types --test src/lib/ip-location.test.ts",
     "test:unit": "node --experimental-strip-types --test src/lib/liquid-glass.test.ts src/lib/liquid-glass-runtime.test.ts src/lib/palette.test.ts src/app/globals.test.ts src/app/entrance-animations.test.ts"
   },
   "dependencies": {

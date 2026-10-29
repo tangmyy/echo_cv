@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { siteConfig, defaultWeatherLocation } from "@/config/site";
+import { fetchIpLocation } from "@/lib/ip-location";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -28,7 +29,7 @@ function notifyListeners(loc: LocationData) {
 /**
  * Core fetch logic with 3-tier fallback:
  * 1. Browser Geolocation API, but only when permission was already granted
- * 2. IP-based geolocation via ipapi.co
+ * 2. IP-based geolocation via configured providers with failover
  * 3. Static config from siteConfig.weather
  */
 async function fetchLocation(): Promise<LocationData> {
@@ -72,28 +73,12 @@ async function fetchLocation(): Promise<LocationData> {
         }
     }
 
-    // 2. Fallback: IP-based geolocation
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 2500);
-    try {
-        const ipRes = await fetch(
-            "https://ipapi.co/json/",
-            { signal: controller.signal },
-        );
-        const ipData = await ipRes.json();
-        if (ipData.latitude && ipData.longitude) {
-            return {
-                lat: ipData.latitude,
-                lon: ipData.longitude,
-                city: ipData.city || ipData.region || "当前位置",
-                source: "ip",
-            };
-        }
-    } catch {
-        // Network failures fall through to static config.
-    } finally {
-        window.clearTimeout(timeout);
-    }
+    // 2. Try independent IP providers; one blocked endpoint must not force the default city.
+    const ipLocation = await fetchIpLocation(
+        siteConfig.geolocation.ipProviders,
+        siteConfig.geolocation.timeoutMs,
+    );
+    if (ipLocation) return ipLocation;
 
     // 3. Ultimate fallback: site config
     const configLoc = siteConfig.weather || defaultWeatherLocation;
