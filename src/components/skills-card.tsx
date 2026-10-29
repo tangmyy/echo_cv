@@ -2,36 +2,36 @@
 
 import { motion } from "framer-motion";
 import {
-    Blocks,
-    Bot,
-    Box,
-    Boxes,
-    Braces,
     Code2,
-    Crosshair,
-    Headset,
-    HousePlug,
-    Router,
-    ServerCog,
-    Wrench,
+    Braces,
+    Camera,
+    Clapperboard,
+    Plane,
+    Bike,
+    Cog,
+    Cuboid,
+    Dumbbell,
+    BookOpen,
+    Podcast,
+    Brain,
     type LucideIcon,
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { GlassCard } from "@/components/glass-card";
 
 const ICON_MAP: Record<string, LucideIcon> = {
-    Blocks,
-    Bot,
-    Box,
-    Boxes,
-    Braces,
     Code2,
-    Crosshair,
-    Headset,
-    HousePlug,
-    Router,
-    ServerCog,
-    Wrench,
+    Braces,
+    Camera,
+    Clapperboard,
+    Plane,
+    Bike,
+    Cog,
+    Cuboid,
+    Dumbbell,
+    BookOpen,
+    Podcast,
+    Brain,
 };
 
 const ACCENT_RGB = {

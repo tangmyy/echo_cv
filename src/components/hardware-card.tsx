@@ -3,6 +3,7 @@ import {
     Monitor,
     Keyboard,
     Printer,
+    Motorbike,
     Watch,
     Wifi,
     type LucideIcon,
@@ -17,6 +18,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
     Monitor,
     Keyboard,
     Printer,
+    Motorbike,
     Watch,
     Wifi,
 };
@@ -89,8 +91,8 @@ export function HardwareCard() {
                     {cardTitles.hardware}
                 </h2>
             </header>
-
-            <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-2 md:grid-rows-3">
+            {/* md:grid-rows-3 改为 md:grid-rows-2 对应的是两行 */}
+            <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-2 md:grid-rows-2">
                 {hardware.map((group, i) => (
                     <CategoryGroup
                         key={group.category}

@@ -39,7 +39,7 @@ export interface SiteConfig {
     }[];
     software: {
         name: string;
-        icon: string;   // filename = /icons/software/{name}.svg | URL = CDN | "" = letter fallback
+        icon: string;   // 本地文件名（省略扩展名时为 SVG）、/public路径对应的URL、远程URL；空值显示首字
     }[];
     socialLinks: ({
         platform: "github" | "douyin-shop" | "wechat" | "douyin" | "wechat-public" | "bilibili" | "steam" | "resume" | "email";
@@ -139,11 +139,11 @@ export const siteConfig: SiteConfig = {
         name: "张行",
         title: "Vibe Coding & Full-Stack Developer",
         description: {
-            zh: "非常欢迎交流一些产品创意或用户角度上需求探讨。要永远对任何事物与逻辑抱有底层问题思考和吸收转化。带有批判性思维触及问题的核心。做爱做并且能持续满足自我的事情。",
-            en: "Always open to discussing product ideas and exploring user-centric needs. Think critically, get to the core of every problem, and do what you love.",
-            ja: "プロダクトのアイデアやユーザー視点のニーズについて、ぜひ交流しましょう。常に本質的な問い掛けを大切にしています。",
+            zh: "请永远带着批判性思维去做热爱并且能持续满足自我的事情。拆掉常识的外壳，直达真理的底层逻辑，再从那里重新构建世界。",
+            en: "Always think critically as you pursue what you love and what brings you lasting fulfillment. Strip away the shell of conventional wisdom, reach the fundamental logic underlying truth, and rebuild the world from there.",
+            ja: "いつも批判的思考を忘れずに、心から好きで、自分を満たし続けてくれることに取り組もう。常識の殻を取り払い、真理を支える根本の論理に迫り、そこから世界を組み立て直そう。",
         },
-        avatar: "/cat.png",
+        avatar: "/sheep.png",
         aliases: ["张行", "Tmyyy", "脆脆鲨同学", "Echo"],
         location: "China Anhui | VRChat",
     },
@@ -152,58 +152,86 @@ export const siteConfig: SiteConfig = {
         interests: "Interests",
         hardware: "Hardware",
         projects: "Projects",
-        blog: "我的内容",
-        blogLink: "查看简历",
+        blog: "Blog",
+        blogLink: "Blog Home",
     },
 
     interests: [
         { label: "Vibe Coding", icon: "Code2", accent: "blue" },
-        { label: "DIY", icon: "Wrench", accent: "orange" },
         { label: "Developer", icon: "Braces", accent: "green" },
-        { label: "3D Print", icon: "Box", accent: "purple" },
-        { label: "CS2", icon: "Crosshair", accent: "red" },
-        { label: "VRChat", icon: "Headset", accent: "purple" },
-        { label: "Unity", icon: "Boxes", accent: "blue" },
-        { label: "Minecraft", icon: "Blocks", accent: "green" },
-        { label: "OpenWrt", icon: "Router", accent: "mint" },
-        { label: "Home Assistant", icon: "HousePlug", accent: "orange" },
-        { label: "QQ Bot Dev", icon: "Bot", accent: "red" },
-        { label: "ESXi Server", icon: "ServerCog", accent: "mint" },
+        { label: "Photography", icon: "Camera", accent: "purple" },
+        { label: "Video Editing", icon: "Clapperboard", accent: "orange" },
+        { label: "Travel", icon: "Plane", accent: "blue" },
+        { label: "Cycling", icon: "Bike", accent: "mint" },
+        { label: "Mechanics", icon: "Cog", accent: "orange" },
+        { label: "Fitness", icon: "Dumbbell", accent: "red" },
+        { label: "Reading", icon: "BookOpen", accent: "green" },
+        { label: "Podcasts", icon: "Podcast", accent: "purple" },
+        { label: "Thinking", icon: "Brain", accent: "mint" },
+        { label: "Rubik’s Cube", icon: "Cuboid", accent: "orange" },
     ],
 
     hardware: [
-        { category: "Apple", icon: "Apple", accent: "blue", items: ["MacBook Pro M5", "Mac Mini M2", "Air Pods 3 Pro", "iPhone 15 Pro (Europe)"] },
-        { category: "Desktop", icon: "Monitor", accent: "green", items: ["R7-9800X3D", "ROG RTX 5090 32G", "32GB DDR5", "ROG STRIX B650-A Gaming WIFI", "DELL R720XD Server | 100G | 22T"] },
-        { category: "Peripherals", icon: "Keyboard", accent: "orange", items: ["Quest 3", "HHKB", "NIZ PLUM", "Razer DeathAdder V3", "Logitech G502", "Logitech M720"] },
-        { category: "DIY & Maker", icon: "Printer", accent: "purple", items: ["Xtool M1 Ultra", "Bambu Lab A1 AMS", "Bambu Lab A1 mini AMS", "Snapmaker U1", "EPSON L8058"] },
-        { category: "Wearable", icon: "Watch", accent: "red", items: ["Garmin Enduro 2"] },
-        { category: "Network", icon: "Wifi", accent: "mint", items: ["GL·iNet AX1800", "GL·iNet MT3000", "N5105"] },
+        { category: "Apple", icon: "Apple", accent: "blue", 
+            items: ["MacBook Pro", 
+                    "iPad Pro 2020", 
+                    "iPhone 13 ProMax (America)", 
+                    "Air Pods 3 Pro",
+                ] 
+        },
+        {
+            category: "Desktop", icon: "Monitor", accent: "green",
+            items: [
+                "ROG Strix G614JI",
+                "Intel Core i9-13980HX",
+                "32GB DDR5",
+                "RTX 4070 8GB",
+                "Tencent Cloud Server | 2 vCPU | 2GB RAM",
+            ],
+        },
+        {
+            category: "Peripherals", icon: "Keyboard", accent: "orange",
+            items: [
+                "Bat Rider BK75Plus",
+                "Logitech G502X",
+                "DJI Action 5 Pro",
+                "DJI Pocket 3",
+                "Insta 360 X5",
+            ],
+        },
+        {
+            category: "Motorcycles", icon: "Motorbike", accent: "purple",
+            items: [
+                "Suzuki GSX250R",
+                "Aprilia GPR250R",
+                "Zontes 703F",
+                "VOGE CU525",
+                "VOGE CU625",
+            ],
+        },
     ],
 
 
     software: [
-        // IDE & Game Engine
         { name: "VS Code", icon: "vscode" },
         { name: "IntelliJ IDEA", icon: "intellij" },
-        { name: "Unity", icon: "unity" },
-
-        // AI & Productivity
-        { name: "Antigravity", icon: "antigravity" },
+        { name: "IntelliJ PyCharm", icon: "pycharm.png" },
+        { name: "codeblocks", icon: "codeblocks.png" },
+        { name: "HBuilder X", icon: "hbuilderx.png" },
+        { name: "微信开发者工具", icon: "wechat-devtools.png" },
+        { name: "GitKraken", icon: "gitkraken.png" },
+        { name: "Apifox", icon: "apifox.png" },
+        { name: "Obsidian", icon: "obsidian.png" },
+        { name: "滴答清单", icon: "ticktick.png" },
+        { name: "Cursor", icon: "cursor.png" },
         { name: "Codex", icon: "ChatGPT" },
-        { name: "Notion", icon: "notion" },
-
-        // DevOps & Terminal
-        { name: "Docker", icon: "docker" },
-        { name: "Homebrew", icon: "homebrew" },
-        { name: "Tmux", icon: "tmux" },
-
-        // Network & Proxy
-
-        { name: "OpenVPN", icon: "OpenVPN" },
-        { name: "Shadowsocks", icon: "Shadowsocks" },
-        { name: "WireGuard", icon: "wireguard" },
-
-        // Media
+        { name: "Adobe Bridge", icon: "adobe-bridge.png" },
+        { name: "DaVinci Resolve", icon: "davinci-resolve.png" },
+        { name: "剪映专业版", icon: "jianying.png" },
+        { name: "Insta360 Studio", icon: "insta360-studio.png" },
+        { name: "夸克网盘", icon: "quark.png" },
+        { name: "WPS Office", icon: "wps.png" },
+        { name: "abcVPN", icon: "abcvpn.png" },
         { name: "网易云", icon: "netEase-cloud-music" },
     ],
 
@@ -220,61 +248,25 @@ export const siteConfig: SiteConfig = {
     ],
     socialUi: { close: "关闭二维码", imageUnavailable: "二维码图片暂未上传" },
 
-    friends: [
-        {
-            name: "郭老师",
-            avatar: "https://chaosgoo.com/images/Logo_Sketch.webp",
-            url: "https://chaosgoo.com/",
-            description: "郭老师带带我",
-        },
-        {
-            name: "荟荟",
-            avatar: "https://blog.nhui.top/content/uploadfile/202504/ad7b1745254714.jpg",
-            url: "https://blog.nhui.top/",
-            description: "男科大叫受荟荟",
-        },
-        {
-            name: "李老板",
-            avatar: "https://pbs.twimg.com/profile_images/2028353368008339456/o3OhBxWk_400x400.jpg",
-            url: "https://leetfs.com/",
-            description: "木桶饭糕手李老板",
-        },
-        {
-            name: "光水",
-            description: "光科长",
-            avatar: "https://api.vrchat.cloud/api/1/file/file_c00911ce-3e53-4e98-a494-936811cc85a8/1/",
-            url: "https://www.songzx.com/",
-        },
-        {
-            name: "小路",
-            avatar: "https://avatars.githubusercontent.com/u/8012410",
-            url: "https://tun.cat",
-        },
-        {
-            name: "Alumi",
-            avatar: "https://lisek.cc/profile.png",
-            url: "https://lisek.cc",
-        },
-    ],
 
     projects: [
         {
-            name: "心率推送",
-            description: "基于 Flutter 的跨平台 BLE 心率监控与推送工具，支持 HTTP/WS、OSC、MQTT 多协议实时推送，适用于 VRChat 模型联动。",
-            url: "https://github.com/Ero-Cat/hr_push",
-            tags: ["Flutter", "BLE", "OSC", "VRChat"],
+            name: "ShayuVideo API",
+            description: "鲨鱼视频 Java 后端，提供视频发布、评论点赞、关注关系、异步消息通知及举报申诉接口，为用户端和管理后台提供服务。",
+            url: "https://github.com/tangmyy/ShayuVideo_api",
+            tags: ["Spring Boot", "MyBatis", "Redis", "RabbitMQ"],
         },
         {
-            name: "Bento Homepage",
-            description: "配置驱动的液态玻璃风格个人主页，集成网易云播放器、VRChat 实时状态、GitHub 热力图、3D Tilt 毛玻璃卡片、背景轮播、多头像轮播、多语言 i18n，支持 GitHub Pages 全静态部署。",
-            url: "https://github.com/Ero-Cat/bento-Homepage",
-            tags: ["Next.js", "React", "TypeScript", "Bento Grid"],
+            name: "ShayuVideo Admin",
+            description: "鲨鱼视频 Web 管理后台，支持用户、视频和评论管理，提供内容审核、举报申诉处理及运营数据统计。",
+            url: "https://github.com/tangmyy/ShayuVideo_admin",
+            tags: ["Vue 3", "Vite", "Element Plus", "Pinia"],
         },
         {
-            name: "ESXi UPS Automation",
-            description: "ESXi 服务器 UPS 断电自动化管理工具，支持 NUT 监控 UPS 状态并在断电时自动安全关闭虚拟机与宿主机，保障数据安全。",
-            url: "https://github.com/Ero-Cat/ESXi-UPS-Automation",
-            tags: ["ESXi", "UPS", "Automation", "Shell"],
+            name: "ShayuVideo APP",
+            description: "鲨鱼视频用户客户端，支持短视频浏览与发布、评论点赞、关注和消息通知，视频通过 uniCloud 上传。",
+            url: "https://github.com/tangmyy/ShayuVideo_APP",
+            tags: ["uni-app", "Vue 2", "nvue", "uniCloud"],
         },
     ],
 
@@ -315,17 +307,12 @@ export const siteConfig: SiteConfig = {
     blog: {
         posts: [
             {
-                title: "我的个人简历",
+                title: "个人简历-软件开发工程师",
                 url: "https://tmyyy.top/resume_zx/",
-                tags: ["简历", "关于我"],
-                updatedAt: "", // Fill in the actual update date, e.g. YYYY-MM-DD.
+                tags: ["简历", "软件开发"],
+                updatedAt: "2026-10-01", // Fill in the actual update date, e.g. YYYY-MM-DD.
             },
         ],
-    },
-
-    vrchat: {
-        apiBase: "https://vrcx-cloud.iacg.moe",
-        bioLines: 5,
     },
 
     map: {
@@ -395,22 +382,32 @@ export const siteConfig: SiteConfig = {
             { name: "长春市", coordinates: [125.3235, 43.8171], visitedAt: "2026.10.17" },
         ],
     },
-
+    
     weather: { ...defaultWeatherLocation },
+
+    vrchat: {
+        apiBase: "https://vrcx-cloud.iacg.moe",
+        bioLines: 5,
+    },
+    friends: [
+        {
+            name: "郭老师",
+            avatar: "https://chaosgoo.com/images/Logo_Sketch.webp",
+            url: "https://chaosgoo.com/",
+            description: "郭老师带带我",
+        },
+    ],
+
 
     seo: {
         title: "Echo — ZX个人主页",
         description:
-            "EroCat（大黄猫）的个人主页 — Full-Stack Developer & Vibe Coder。热衷 Spring Boot、Unity、3D 打印、DIY、VRChat、Home Assistant 智能家居，以及各种折腾服务器与网络。欢迎交流产品创意与技术探讨。",
+            "Echo（ZX）的个人主页 — Full-Stack Developer & Vibe Coder。热衷 Spring Boot、Unity、3D 打印、DIY、VRChat、Home Assistant 智能家居，以及各种折腾服务器与网络。欢迎交流产品创意与技术探讨。",
         keywords: [
-            "EroCat", "大黄猫", "DoKiDoKi",
-            "全栈开发", "Full-Stack Developer", "Vibe Coding",
-            "Spring Boot", "Next.js", "React", "TypeScript",
-            "Unity", "VRChat", "3D Print",
-            "DIY", "Home Assistant", "OpenWrt", "ESXi",
-            "个人主页", "portfolio",
+            "Echo", "Tmyyy", "脆脆鲨同学",
+            "全栈开发", "个人主页", "CV",
         ],
-        ogImage: "/cat.png",
+        ogImage: "/sheep.png",
         siteUrl: "https://iacg.moe",
     },
 

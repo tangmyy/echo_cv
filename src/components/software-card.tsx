@@ -8,20 +8,22 @@ import { SPRING_GENTLE } from "@/lib/motion";
 
 /* ============================================================
    macOS-style App Icon — frosted glass tile with Ambient Glow
-   Icon source: just drop .svg files into /public/icons/software/
+   Icon source: local SVG/PNG/WebP files in /public/icons/software/
    ============================================================ */
 function AppIcon({ app }: { app: { name: string; icon: string } }) {
     const [imgError, setImgError] = useState(false);
 
     /*  Icon resolution:
      *   "docker"     → /icons/software/docker.svg  (local file)
+     *   "example.png" → /icons/software/example.png
+     *   "/icons/…"  → Absolute public asset path
      *   "https://…"  → Remote CDN URL
      *   ""           → First-letter fallback
      */
     const showFallback = !app.icon || imgError;
-    const imgSrc = app.icon.startsWith("http")
+    const imgSrc = app.icon.startsWith("http") || app.icon.startsWith("/")
         ? app.icon
-        : `/icons/software/${app.icon}.svg`;
+        : `/icons/software/${app.icon}${/\.(svg|png|webp|ico)$/i.test(app.icon) ? "" : ".svg"}`;
 
     const iconContent = showFallback ? (
         <span className="text-text-primary text-2xl font-bold drop-shadow-[0_1px_1px_rgba(255,255,255,0.35)] dark:text-white/90 dark:drop-shadow-sm">
@@ -50,7 +52,8 @@ function AppIcon({ app }: { app: { name: string; icon: string } }) {
             </div>
 
             {/* Label */}
-            <span className="text-[11px] text-text-secondary text-center leading-tight w-[64px] truncate">
+            <span title={app.name}
+                className="text-[11px] text-text-secondary text-center leading-tight w-[64px] truncate">
                 {app.name}
             </span>
         </motion.div>
@@ -92,7 +95,7 @@ export function SoftwareCard() {
             </div>
 
             {/* ── Launchpad-style App Grid ── */}
-            <div className="grid grid-cols-4 sm:grid-cols-5 gap-x-2 gap-y-4 p-5 place-items-center">
+            <div className="grid min-h-0 flex-1 grid-cols-4 sm:grid-cols-5 content-start gap-x-2 gap-y-4 overflow-y-auto p-5 place-items-center">
                 {software.map((app) => (
                     <AppIcon key={app.name} app={app} />
                 ))}

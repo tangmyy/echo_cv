@@ -46,15 +46,11 @@ export default function Home() {
         </BentoGridItem>
 
         <BentoGridItem className="md:col-span-1 md:row-span-2">
-          <NowPlayingCard />
+          <WeatherCard />
         </BentoGridItem>
 
         <BentoGridItem className="md:col-span-2 md:row-span-2">
           <SkillsCard />
-        </BentoGridItem>
-
-        <BentoGridItem className="md:col-span-1 md:row-span-2">
-          <WeatherCard />
         </BentoGridItem>
 
         <BentoGridItem className="md:col-span-1 md:row-span-2">
@@ -65,28 +61,32 @@ export default function Home() {
           <SocialCard />
         </BentoGridItem>
 
-        <BentoGridItem className="md:col-span-2 md:row-span-3">
-          <SoftwareCard />
+        <BentoGridItem className="md:col-span-1 md:row-span-2">
+          <NowPlayingCard />
+        </BentoGridItem>
+
+        <BentoGridItem className="md:col-span-2 md:row-span-5">
+          <ProjectsCard />
         </BentoGridItem>
 
         <BentoGridItem className="md:col-span-2 md:row-span-3">
           <MapCard />
         </BentoGridItem>
 
-        <BentoGridItem className="md:col-span-4 md:row-span-6">
+        <BentoGridItem className="md:col-span-2 md:row-span-5">
           <PhotoStackCard photos={photoImages} />
         </BentoGridItem>
 
-        <BentoGridItem className="md:col-span-2 md:row-span-6">
+        <BentoGridItem className="md:col-span-2 md:row-span-5">
+          <BlogCard />
+        </BentoGridItem>
+
+        <BentoGridItem className="md:col-span-2 md:row-span-4">
           <HardwareCard />
         </BentoGridItem>
 
-        <BentoGridItem className="md:col-span-2 md:row-span-6">
-          <ProjectsCard />
-        </BentoGridItem>
-
-        <BentoGridItem className="md:col-span-2 md:row-span-2">
-          <BlogCard />
+        <BentoGridItem className="md:col-span-2 md:row-span-4">
+          <SoftwareCard />
         </BentoGridItem>
 
         {/* VRChat 已隐藏；恢复时同时取消导入注释，并将 ProfileCard 改回 md:col-span-3。 */}
