@@ -13,6 +13,7 @@ module.exports = {
       settings: {
         // 使用移动端模拟设置。
         formFactor: "mobile",
+        locale: "zh",
       },
     },
 
