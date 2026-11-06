@@ -1,0 +1,59 @@
+name: Lighthouse performance report
+
+on:
+  # 推送 main 后自动检测。
+  push:
+    branches: [main]
+
+  # 允许在 Actions 页面手动执行。
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      # 下载本次提交的代码。
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      # pnpm 版本读取 package.json 的 packageManager。
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v5
+
+      # 与现有部署流程保持相同的 Node.js 版本。
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # 根据锁文件安装依赖，包括 Lighthouse CI。
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 生成正式静态网页，保留地图 Token 注入。
+      - name: Build website
+        env:
+          NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: ${{ secrets.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN }}
+        run: pnpm build
+
+      # 检测刚刚生成的 out，报告保存在本地目录。
+      - name: Run Lighthouse CI
+        run: pnpm exec lhci autorun
+
+      # 即使检测失败，也尝试保存已经生成的报告。
+      - name: Save Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-reports
+          path: lighthouse-reports/
+          retention-days: 14
+          if-no-files-found: warn

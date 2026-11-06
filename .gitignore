@@ -44,3 +44,7 @@ TASK_PLANS.md
 /AGENTS.md
 /.idea/
 /.worktrees/
+
+# Lighthouse CI 临时数据与报告
+/.lighthouseci/
+/lighthouse-reports/
