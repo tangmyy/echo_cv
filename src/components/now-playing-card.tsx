@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo, type CSSProperties } from "react";
+import { useState, useEffect, useRef, useCallback, type CSSProperties } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Music, SkipBack, Play, Pause, SkipForward, Volume2, VolumeX } from "lucide-react";
-import { siteConfig } from "@/config/site";
 import {
     extractDominantColor,
     toRgbTriple,
@@ -18,6 +17,7 @@ export interface NeteaseTrack {
     artist: string;
     album: string;
     albumCover: string;
+    localAlbumCover?: string;
     duration: number; // ms
     songId: number;
 }
@@ -43,12 +43,7 @@ function getSongUrl(songId: number) {
    NowPlayingCard Component — iOS media card style
    with real audio playback
    ============================================================ */
-export function NowPlayingCard() {
-    const tracks = useMemo<NeteaseTrack[]>(
-        () => (siteConfig.netease?.tracks ?? []).map((t) => ({ ...t })),
-        []
-    );
-
+export function NowPlayingCard({ tracks }: { tracks: NeteaseTrack[] }) {
     const [currentIdx, setCurrentIdx] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
@@ -96,6 +91,13 @@ export function NowPlayingCard() {
     }, [currentIdx, tracks]);
 
     const track = tracks[currentIdx] ?? null;
+    const [failedLocalCovers, setFailedLocalCovers] = useState<Set<string>>(() => new Set());
+    const localCover = track?.localAlbumCover;
+    const useLocalCover = localCover !== undefined && !failedLocalCovers.has(localCover);
+    const coverUrl = useLocalCover ? localCover : track?.albumCover;
+    const onCoverError = useLocalCover
+        ? () => setFailedLocalCovers(failed => failed.has(localCover) ? failed : new Set([...failed, localCover]))
+        : undefined;
 
     /* ── Content ambient light — the album art acts as an area light ── */
     const [ambient, setAmbient] = useState<DominantColor | null>(null);
@@ -103,13 +105,13 @@ export function NowPlayingCard() {
     useEffect(() => {
         let cancelled = false;
         // 缓存命中与真实提取统一走异步链，避免 effect 内同步 setState 级联渲染
-        extractDominantColor(track?.albumCover ?? "").then((color) => {
+        extractDominantColor(coverUrl ?? "").then((color) => {
             if (!cancelled) setAmbient(color);
         });
         return () => {
             cancelled = true;
         };
-    }, [track?.albumCover]);
+    }, [coverUrl]);
 
     /* ── rAF-based progress — reads from audio element ── */
     /* ── rAF-based progress — reads from audio element ── */
@@ -286,10 +288,11 @@ export function NowPlayingCard() {
             <div className="ios-media-card__panel relative h-full w-full min-h-[200px]">
                 {/* ── Layer 1: Pre-blurred album art background (crossfade — no black corner flash) ── */}
                 <AnimatePresence>
-                    {track?.albumCover && (
+                    {coverUrl && (
                         <motion.img
-                            key={track.albumCover}
-                            src={track.albumCover}
+                            key={coverUrl}
+                            src={coverUrl}
+                            onError={onCoverError}
                             alt=""
                             className="absolute inset-0 w-full h-full object-cover scale-125"
                             style={{ filter: "blur(40px) saturate(1.6) brightness(0.45)" }}
@@ -328,16 +331,19 @@ export function NowPlayingCard() {
                         {/* Album Cover — shadow partly carries the artwork's own color */}
                         <div className="ios-media-card__album glass-media-mask h-[72px] w-[72px] shrink-0 rounded-[24px]">
                             <AnimatePresence>
-                                <motion.img
-                                    key={track.songId}
-                                    src={track.albumCover}
-                                    alt={track.album}
-                                    className="w-full h-full object-cover"
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.9 }}
-                                    transition={{ duration: 0.3 }}
-                                />
+                                {coverUrl && (
+                                    <motion.img
+                                        key={coverUrl}
+                                        src={coverUrl}
+                                        onError={onCoverError}
+                                        alt={track.album}
+                                        className="w-full h-full object-cover"
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.9 }}
+                                        transition={{ duration: 0.3 }}
+                                    />
+                                )}
                             </AnimatePresence>
                         </div>
 

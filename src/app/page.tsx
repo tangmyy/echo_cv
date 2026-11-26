@@ -9,7 +9,8 @@ import { HardwareCard } from "@/components/hardware-card";
 import { SoftwareCard } from "@/components/software-card";
 // import { FriendsCard } from "@/components/friends-card";
 import { PhotoStackCard } from "@/components/photo-stack-card";
-import { NowPlayingCard } from "@/components/now-playing-card";
+import { NowPlayingCard, type NeteaseTrack } from "@/components/now-playing-card";
+import { siteConfig } from "@/config/site";
 import { GitHubHeatmapCard } from "@/components/github-heatmap-card";
 // import { VRChatStatusCard } from "@/components/vrchat-status-card";
 import { MapCard } from "@/components/map-card";
@@ -23,7 +24,9 @@ const IMAGE_RE = /\.(jpe?g|png|webp|avif)$/i;
 function scanImages(subdir: string): string[] {
   const dir = path.join(process.cwd(), "public", subdir);
   try {
-    return fs.readdirSync(dir).filter((f) => IMAGE_RE.test(f));
+    return fs.readdirSync(dir, { withFileTypes: true })
+      .filter(file => file.isFile() && IMAGE_RE.test(file.name))
+      .map(file => file.name);
   } catch {
     return [];
   }
@@ -32,6 +35,14 @@ function scanImages(subdir: string): string[] {
 export default function Home() {
   const avatarImages = scanImages("avatar");
   const photoImages = scanImages("photos");
+  const coverIds = new Set(scanImages("albumCover").map(file => file.replace(IMAGE_RE, "")));
+  const optimizedCovers = new Set(scanImages("optimized/albumCover"));
+  const tracks: NeteaseTrack[] = (siteConfig.netease?.tracks ?? []).map(track => {
+    const filename = `${track.songId}.webp`;
+    return coverIds.has(String(track.songId)) && optimizedCovers.has(filename)
+      ? { ...track, localAlbumCover: `/optimized/albumCover/${filename}` }
+      : track;
+  });
 
   return (
     <main className="relative flex min-h-dvh flex-col items-center justify-start py-8 sm:py-10 md:py-14">
@@ -62,7 +73,7 @@ export default function Home() {
         </BentoGridItem>
 
         <BentoGridItem className="md:col-span-1 md:row-span-2">
-          <NowPlayingCard />
+          <NowPlayingCard tracks={tracks} />
         </BentoGridItem>
 
         <BentoGridItem className="md:col-span-2 md:row-span-5">

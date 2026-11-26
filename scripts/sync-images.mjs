@@ -14,11 +14,16 @@ const force = process.argv.includes("--force");
 async function syncImages() {
     let converted = 0;
     let skipped = 0;
-    for (const group of ["bg", "photos"]) {
+    for (const [group, maxSize] of [["bg", 2560], ["photos", 2560], ["albumCover", 400]]) {
         const sourceDir = path.join(root, "public", group);
         const targetDir = path.join(root, "public", "optimized", group);
-        const entries = await readdir(sourceDir, { withFileTypes: true });
+        const entries = await readdir(sourceDir, { withFileTypes: true }).catch(error => {
+            if (group === "albumCover" && error.code === "ENOENT") return null;
+            throw error;
+        });
+        if (!entries) continue;
         const images = entries.filter(entry => entry.isFile() && imagePattern.test(entry.name));
+        if (!images.length) continue;
         const names = new Set();
         // Detect ambiguous names before writing any files in this group.
         for (const image of images) {
@@ -42,7 +47,7 @@ async function syncImages() {
             const temporary = `${target}.${process.pid}.tmp`;
             try {
                 await sharp(source).rotate()
-                    .resize({ width: 2560, height: 2560, fit: "inside", withoutEnlargement: true })
+                    .resize({ width: maxSize, height: maxSize, fit: "inside", withoutEnlargement: true })
                     .webp({ quality: 85 }).toFile(temporary);
                 await rename(temporary, target);
             } finally {

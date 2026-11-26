@@ -47,8 +47,8 @@ jobs: # 定义任务集合。
           pnpm build
           # 确认静态导出的首页存在；不存在时返回非零退出码，停止部署。
           test -f out/index.html
-          # 网页运行时使用optimized图片；发布包排除背景/照片原图，本地和仓库源素材保留。
-          tar -czf site.tar.gz --exclude='./bg' --exclude='./photos' -C out .
+          # 网页运行时使用优化图片；发布包排除背景、照片和音乐封面原图。
+          tar -czf site.tar.gz --exclude='./bg' --exclude='./photos' --exclude='./albumCover' -C out .
           # 输出实际压缩包大小，便于判断上传耗时，不输出密钥。
           ls -lh site.tar.gz
 

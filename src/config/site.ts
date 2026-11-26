@@ -255,22 +255,22 @@ export const siteConfig: SiteConfig = {
 
     projects: [
         {
-            name: "ShayuVideo API",
-            description: "鲨鱼视频 Java 后端，提供视频发布、评论点赞、关注关系、异步消息通知及举报申诉接口，为用户端和管理后台提供服务。",
-            url: "https://github.com/tangmyy/ShayuVideo_api",
-            tags: ["Spring Boot", "MyBatis", "Redis", "RabbitMQ"],
+            name: "AiVideo",
+            description: "将多条视频链接放进列表，批量下载，并可以自动将视频中的人声转写成带时间戳的 TXT 文件的桌面工具。",
+            url: "https://github.com/tangmyy/AiVideo",
+            tags: ["Python", "PyQt5", "faster-whisper", "FFmpeg"],
         },
         {
-            name: "ShayuVideo Admin",
-            description: "鲨鱼视频 Web 管理后台，支持用户、视频和评论管理，提供内容审核、举报申诉处理及运营数据统计。",
-            url: "https://github.com/tangmyy/ShayuVideo_admin",
-            tags: ["Vue 3", "Vite", "Element Plus", "Pinia"],
+            name: "ClipShelf",
+            description: "截图盒：截图自动收进屏幕边的小盒子，点选几张拖出去就能发 | A tiny always-on-top screenshot shelf for Windows",
+            url: "https://github.com/tangmyy/ClipShelf",
+            tags: ["C#", ".NET Framework", "RapidOCR", "Windows OCR"],
         },
         {
             name: "ShayuVideo APP",
-            description: "鲨鱼视频用户客户端，支持短视频浏览与发布、评论点赞、关注和消息通知，视频通过 uniCloud 上传。",
+            description: "鲨鱼视频用户客户端，围绕短视频平台基于UniApp设计与实现，采用Maven父子工程进行模块化设计，实现业务解耦与代码复用。",
             url: "https://github.com/tangmyy/ShayuVideo_APP",
-            tags: ["uni-app", "Vue 2", "nvue", "uniCloud"],
+            tags: ["UniApp", "Vue", "uniCloud", "nvue"],
         },
     ],
 

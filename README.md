@@ -136,6 +136,7 @@ NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=你的pk公开Token
 |---|---|---|
 | public/bg/ | public/optimized/bg/ | 整页背景轮播及玻璃折射背景 |
 | public/photos/ | public/optimized/photos/ | 照片堆叠卡片 |
+| public/albumCover/ | public/optimized/albumCover/ | 网易云音乐封面 |
 | public/avatar/ | 无 | 头像轮播 |
 | public/qrcodes/ | 无 | 社交二维码弹窗 |
 
@@ -149,7 +150,9 @@ node scripts/sync-images.mjs
 pnpm images:sync --force
 ```
 
-脚本支持顶层 JPG/JPEG、PNG、WebP、AVIF，自动校正方向、最长边限制 2560px、不放大小图，WebP 质量 85。按文件修改时间增量跳过，保留原图与旧优化图；同名不同扩展名输出冲突会报错。复用 Next.js 依赖中的 sharp。
+脚本支持顶层 JPG/JPEG、PNG、WebP、AVIF，自动校正方向、不放大小图，WebP 质量 85。背景和照片最长边限制 2560px，音乐封面最长边限制 400px。按文件修改时间增量跳过，保留原图与旧优化图；同名不同扩展名输出冲突会报错。复用 Next.js 依赖中的 sharp。
+
+网易云封面原图以歌曲 `songId` 命名，例如 `public/albumCover/1814460094.jpg`。同步后生成 `public/optimized/albumCover/1814460094.webp`。首页构建时检查原图和 WebP 是否同时存在；匹配成功时，播放器用同一张本地图显示封面、渲染背景并提取主色。没有本地图或本地图加载失败时，回退到曲目的远程 `albumCover`。同步脚本不联网下载原图，部署包仅保留优化版。
 
 `pnpm dev` 和 `pnpm build` 启动前会同步一次，不持续监听。运行期间新增或替换图片后重新同步并重启开发服务。脚本按自身位置定位项目，其他工作目录运行时需提供脚本完整路径。
 
@@ -158,7 +161,7 @@ pnpm images:sync --force
 | 命令 | 用途 |
 |---|---|
 | pnpm dev | 同步图片并启动开发服务器 |
-| pnpm images:sync | 增量生成背景和照片 WebP |
+| pnpm images:sync | 增量生成背景、照片和音乐封面 WebP |
 | pnpm images:sync --force | 全量重新转换 |
 | pnpm build | 同步图片并静态导出到 out/ |
 | pnpm lint | ESLint 检查 |
